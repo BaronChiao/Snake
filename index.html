@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>贪吃蛇</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            overflow: hidden;
+        }
+        canvas {
+            border: 2px solid #000;
+            background-color: #fff;
+        }
+        h1 {
+            margin-bottom: 10px;
+            font-size: 24px;
+            color: #333;
+        }
+        #score {
+            margin-top: 10px;
+            font-size: 18px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>贪吃蛇游戏</h1>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="score">得分: 0</div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const boxSize = 20; // 每个格子的大小
+        const canvasSize = 400; // 画布大小
+        let score = 0;
+
+        // 初始蛇和食物位置
+        let snake = [{ x: 8 * boxSize, y: 10 * boxSize }];
+        let food = generateFood();
+        let direction = 'RIGHT';
+        let isGameOver = false;
+
+        // 绘制网格
+        function drawGrid() {
+            ctx.strokeStyle = '#ddd';
+            for (let i = 0; i < canvasSize / boxSize; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * boxSize, 0);
+                ctx.lineTo(i * boxSize, canvasSize);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i * boxSize);
+                ctx.lineTo(canvasSize, i * boxSize);
+                ctx.stroke();
+            }
+        }
+
+        // 生成随机食物位置
+        function generateFood() {
+            return {
+                x: Math.floor(Math.random() * (canvasSize / boxSize)) * boxSize,
+                y: Math.floor(Math.random() * (canvasSize / boxSize)) * boxSize,
+            };
+        }
+
+        // 绘制蛇和食物
+        function drawSnake() {
+            ctx.fillStyle = 'green';
+            snake.forEach(segment => {
+                ctx.fillRect(segment.x, segment.y, boxSize, boxSize);
+                ctx.strokeStyle = 'darkgreen';
+                ctx.strokeRect(segment.x, segment.y, boxSize, boxSize);
+            });
+        }
+
+        function drawFood() {
+            ctx.fillStyle = 'red';
+            ctx.fillRect(food.x, food.y, boxSize, boxSize);
+        }
+
+        // 更新蛇的状态
+        function updateSnake() {
+            const head = { ...snake[0] };
+            switch (direction) {
+                case 'UP': head.y -= boxSize; break;
+                case 'DOWN': head.y += boxSize; break;
+                case 'LEFT': head.x -= boxSize; break;
+                case 'RIGHT': head.x += boxSize; break;
+            }
+
+            // 检查撞墙或撞自己
+            if (
+                head.x < 0 || head.y < 0 ||
+                head.x >= canvasSize || head.y >= canvasSize ||
+                snake.some(segment => segment.x === head.x && segment.y === head.y)
+            ) {
+                isGameOver = true;
+                alert('游戏结束！得分: ' + score);
+                document.location.reload();
+            }
+
+            // 吃到食物
+            if (head.x === food.x && head.y === food.y) {
+                food = generateFood();
+                score++;
+                document.getElementById('score').textContent = '得分: ' + score;
+            } else {
+                snake.pop(); // 移除蛇尾
+            }
+
+            snake.unshift(head); // 添加新蛇头
+        }
+
+        // 主游戏循环
+        function gameLoop() {
+            if (isGameOver) return;
+
+            ctx.clearRect(0, 0, canvasSize, canvasSize);
+            drawGrid();
+            drawSnake();
+            drawFood();
+            updateSnake();
+
+            setTimeout(gameLoop, 150); // 调整速度
+        }
+
+        // 监听键盘方向键
+        document.addEventListener('keydown', event => {
+            switch (event.key) {
+                case 'ArrowUp': if (direction !== 'DOWN') direction = 'UP'; break;
+                case 'ArrowDown': if (direction !== 'UP') direction = 'DOWN'; break;
+                case 'ArrowLeft': if (direction !== 'RIGHT') direction = 'LEFT'; break;
+                case 'ArrowRight': if (direction !== 'LEFT') direction = 'RIGHT'; break;
+            }
+        });
+
+        // 开始游戏
+        gameLoop();
+    </script>
+</body>
+</html>
